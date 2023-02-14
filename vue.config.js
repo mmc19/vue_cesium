@@ -21,7 +21,7 @@ module.exports = defineConfig({
     https: false,
     proxy: {
       '/api':{
-        tartget: 'http://localhost:8091', // 实际请求地址,
+        target: 'http://localhost:8011', // 实际请求地址,
         changeOrigin: true,
         rewrite: (path) =>path.replace(/^\/api/, 'api')
       }
@@ -33,7 +33,15 @@ module.exports = defineConfig({
         'vue$': 'vue/dist/vue.cjs.js',
         '@': path.resolve('src'),
         'cesium': path.resolve(__dirname, cesiumSource)
-      }
+      },
+      fallback: {
+        'http': require.resolve('stream-http'),
+        'https': require.resolve('https-browserify'),
+        'url': require.resolve('url/'),
+        'zlib': require.resolve('browserify-zlib'),
+        'assert': require.resolve('assert/'),
+        'stream': require.resolve('stream-browserify') 
+       }
     },
     plugins: [
       new CopyWebPackPlugin({ patterns: [{ from: path.join(cesiumSource, cesiumWorkers), to: 'Workers' }] }),
