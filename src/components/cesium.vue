@@ -3,14 +3,47 @@
 </template>
 
 <script setup>
-import { onMounted } from '@vue/runtime-core'
-const cesium = require('cesium/Cesium')
+import { onMounted, reactive } from '@vue/runtime-core'
+import * as Cesium from'cesium/Cesium'
+
+const props = defineProps({
+  view: {
+    type: [],
+    default: () => [119, 26]
+  }
+})
+let viewer = reactive()
 function initCesium() {
-  const viewer = new cesium.Viewer('cesiumContainer')
+  viewer = new Cesium.Viewer('cesiumContainer',{
+    infoBox: false,
+    //搜索框
+    geocoder: false,
+    //home键
+    homeButton: false,
+    // 动画控件
+    animation: false,
+    //全屏按钮
+    fullscreenButton: false,
+    //场景模式选择器
+    sceneModePicker: false,
+    //时间轴
+    timeline: false,
+    //导航提示
+    navigationHelpButton: false,
+    //地图选择器
+    baseLayerPicker: false,
+  })
+  viewer.scene.camera.setView({
+    destination: Cesium.Cartesian3.fromDegrees(props.view[0], props.view[1], 500000)
+  })
+  viewer.scene.globe.depthTestAgainstTerrain = true
 }
+function getPosition() {
+}
+
 onMounted(() => {
   initCesium()
-  console.log(cesium);
+  getPosition()
 })
 </script>
 

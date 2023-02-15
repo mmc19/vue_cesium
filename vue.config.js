@@ -17,7 +17,7 @@ module.exports = defineConfig({
   devServer: {
     open: process.platform === 'darwin',
     host: '0.0.0.0',
-    port: 8088,
+    port: 10000,
     https: false,
     proxy: {
       '/api':{
