@@ -10,6 +10,7 @@
     "assert": "^2.0.0",
     "browserify-zlib": "^0.2.0",
     "cesium": "^1.102.0",
+    "element-plus": "^2.2.30",
     "https-browserify": "^1.0.0",
     "stream-browserify": "^3.0.0",
     "stream-http": "^3.2.0",

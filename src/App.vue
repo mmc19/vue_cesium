@@ -1,5 +1,5 @@
 <template>
-  <cesium></cesium>
+  <cesium :showEditor="true"></cesium>
 </template>
 
 <script setup>
