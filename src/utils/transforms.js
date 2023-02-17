@@ -31,27 +31,38 @@ export function degreesToCartesian3(coordinate) {
  * @return {*}
  */
 export function drawGeometry(type, viewer) {
-  let position = []
+  let floatPoint = {}
+  let floatPosition = {}
+  let floatPolyline = {}
+  let floatPolygon = {}
+  let polylinePosition = []
+  let lastPolyline = {}
+  let lastPolygon = {}
   let handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas)
-  let temPoints = []
-  let polyline = null
-  let temPrimitives = []
+
   if (type === 'point') {
     // 监听鼠标左键
     handler.setInputAction(function(click) {
       const ray = viewer.scene.camera.getPickRay(click.position)
-      position = viewer.scene.globe.pick(ray, viewer.scene)
-      const point = drawPoint(position, viewer)
-      temPrimitives.push(point)
+      const position = viewer.scene.globe.pick(ray, viewer.scene)
+      if (Object.keys(floatPoint).length !== 0) viewer.entities.remove(floatPoint)
+      drawPoint(position, viewer)
     }, Cesium.ScreenSpaceEventType.LEFT_CLICK)
 
-    // 鼠标左键双击停止绘制
-    handler.setInputAction(function(click) {
-      handler.destroy() // 关闭事件句柄
-      handler = null
-    }, Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK)
+    // 鼠标移动事件
+    handler.setInputAction(function(movement) {
+      const ray = viewer.scene.camera.getPickRay(movement.endPosition)
+      floatPosition = viewer.scene.globe.pick(ray, viewer.scene)
+      if (Object.keys(floatPoint).length !== 0) {
+        viewer.entities.remove(floatPoint)
+      }
+
+      floatPoint = drawPoint(floatPosition, viewer)
+    }, Cesium.ScreenSpaceEventType.MOUSE_MOVE)
+
     // 鼠标右键单击停止绘制
     handler.setInputAction(function(click) {
+      if (floatPoint) viewer.entities.remove(floatPoint)
       handler.destroy() // 关闭事件句柄
       handler = null
     }, Cesium.ScreenSpaceEventType.RIGHT_CLICK)
@@ -60,34 +71,51 @@ export function drawGeometry(type, viewer) {
     // 监听鼠标左键
     handler.setInputAction(function(click) {
       const ray = viewer.scene.camera.getPickRay(click.position)
-      position = viewer.scene.globe.pick(ray, viewer.scene)
-      temPoints.push(position)
-      // 调用绘制点的操作
-      drawPoint(temPoints[temPoints.length - 1], viewer)
-      if (temPoints.length > 1) {
-        // 不断把倒数两个点相连
-        drawPolyline([temPoints[temPoints.length - 2], temPoints[temPoints.length - 1]], viewer)
+      const position = viewer.scene.globe.pick(ray, viewer.scene)
+      polylinePosition.push(position)
+      // 
+      if (polylinePosition.length > 1) {
+        if (Object.keys(floatPoint).length !== 0) viewer.entities.remove(floatPoint)
+        if (Object.keys(floatPolyline).length !== 0) viewer.entities.remove(floatPolyline)
+        lastPolyline = drawPolyline([polylinePosition[polylinePosition.length - 2], polylinePosition[polylinePosition.length - 1]], viewer)
       }
     }, Cesium.ScreenSpaceEventType.LEFT_CLICK)
     // 监听鼠标移动
     handler.setInputAction(function(movement) {
       const ray = viewer.scene.camera.getPickRay(movement.endPosition)
-      position = viewer.scene.globe.pick(ray, viewer.scene)
-      if (temPoints.length >= 1) {
-        // 不断把倒数两个点相连
+      floatPosition = viewer.scene.globe.pick(ray, viewer.scene)
 
-        const polyline = drawPolyline([temPoints[temPoints.length - 1], position], viewer)
-        console.log(position)
+      // 动态点
+      if (Object.keys(floatPoint).length !== 0) viewer.entities.remove(floatPoint)
+      floatPoint = drawPoint(floatPosition, viewer)
+
+      if (polylinePosition.length >= 1) {  // 动态线
+        if (Object.keys(floatPolyline).length !== 0) viewer.entities.remove(floatPolyline)
+        floatPolyline = drawPolyline([polylinePosition[polylinePosition.length - 1], floatPosition], viewer)
       }
-
     }, Cesium.ScreenSpaceEventType.MOUSE_MOVE)
     // 监听鼠标左键双击
     handler.setInputAction(function(click) {
+      const ray = viewer.scene.camera.getPickRay(click.position)
+      const position = viewer.scene.globe.pick(ray, viewer.scene)
+      polylinePosition.push(position)
+  
+      if (polylinePosition.length > 1) {
+        if (Object.keys(floatPoint).length !== 0) viewer.entities.remove(floatPoint)
+        if (Object.keys(floatPolyline).length !== 0) viewer.entities.remove(floatPolyline)
+        if (Object.keys(lastPolyline).length !== 0) viewer.entities.remove(lastPolyline)
+        drawPolyline([polylinePosition[polylinePosition.length - 2], polylinePosition[polylinePosition.length - 1]], viewer)
+      }
+
       handler.destroy() // 关闭事件句柄
       handler = null
     }, Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK)
-    // 鼠标右键单击停止绘制
+    // 监听鼠标右键单击
     handler.setInputAction(function(click) {
+      if (polylinePosition.length > 1) {
+        if (Object.keys(floatPoint).length !== 0) viewer.entities.remove(floatPoint)
+        if (Object.keys(floatPolyline).length !== 0) viewer.entities.remove(floatPolyline)
+      }
       handler.destroy() // 关闭事件句柄
       handler = null
     }, Cesium.ScreenSpaceEventType.RIGHT_CLICK)
@@ -95,41 +123,65 @@ export function drawGeometry(type, viewer) {
   if (type === 'polygon') {
     // 鼠标移动事件
     handler.setInputAction(function(movement) {
+      const ray = viewer.scene.camera.getPickRay(movement.endPosition)
+      floatPosition = viewer.scene.globe.pick(ray, viewer.scene)
 
+      // 动态点
+      if (Object.keys(floatPoint).length !== 0) viewer.entities.remove(floatPoint)
+      floatPoint = drawPoint(floatPosition, viewer)
+      // 动态线
+      if (polylinePosition.length >= 1) {  
+        if (Object.keys(floatPolyline).length !== 0) viewer.entities.remove(floatPolyline)
+        floatPolyline = drawPolyline([polylinePosition[polylinePosition.length - 1], floatPosition], viewer)
+      }
+      // 动态面
+      if (polylinePosition.length >=2) {
+        if (Object.keys(lastPolygon).length !== 0) viewer.entities.remove(lastPolygon)
+        if (Object.keys(floatPolygon).length !== 0) viewer.entities.remove(floatPolygon)
+        floatPolygon = drawPolygon([polylinePosition.flat(), floatPosition].flat(), viewer)
+      }
     }, Cesium.ScreenSpaceEventType.MOUSE_MOVE)
     // 监听鼠标左键操作
     handler.setInputAction(function(click) {
       const ray = viewer.scene.camera.getPickRay(click.position)
-      position = viewer.scene.globe.pick(ray, viewer.scene)
-      temPoints.push(position)
-      // 调用绘制点的接口
-      drawPoint(position, viewer)
-      if (temPoints.length > 1) {
-        // 不断把倒数两个点相连
-        drawPolyline([temPoints[temPoints.length - 2], temPoints[temPoints.length - 1]], viewer)
+      const position = viewer.scene.globe.pick(ray, viewer.scene)
+      polylinePosition.push(position)
+
+      if (polylinePosition.length > 1) {
+        if (Object.keys(floatPoint).length !== 0) viewer.entities.remove(floatPoint)
+        if (Object.keys(floatPolyline).length !== 0) viewer.entities.remove(floatPolyline)
+        lastPolyline = drawPolyline([polylinePosition[polylinePosition.length - 2], polylinePosition[polylinePosition.length - 1]], viewer)
       }
-      if (temPoints.length >= 3) {
-        // 把倒数两个点相连
-        drawPolyline([temPoints[temPoints.length - 2], temPoints[temPoints.length - 1]], viewer)
-        drawPolygon(temPoints, viewer)
+      if (polylinePosition.length > 2) {
+        if (Object.keys(floatPoint).length !== 0) viewer.entities.remove(floatPoint)
+        if (Object.keys(floatPolyline).length !== 0) viewer.entities.remove(floatPolyline)
+        if (Object.keys(lastPolygon).length !== 0) viewer.entities.remove(lastPolygon)
+        if (Object.keys(floatPolygon).length !== 0) viewer.entities.remove(floatPolygon)
+        lastPolygon = drawPolygon(polylinePosition.flat(), viewer)
       }
     }, Cesium.ScreenSpaceEventType.LEFT_CLICK)
 
     // 监听鼠标左键双击操作
     handler.setInputAction(function(click) {
       const ray = viewer.scene.camera.getPickRay(click.position)
-      position = viewer.scene.globe.pick(ray, viewer.scene)
-      temPoints.push(position)
-      if (temPoints.length < 3) {
-        alert('请选择3个点以上')
-      } else {
-        // 把倒数两个点相连
-        drawPolyline([temPoints[temPoints.length - 2], temPoints[temPoints.length - 1]], viewer)
-        drawPolygon(temPoints, viewer)
+      const position = viewer.scene.globe.pick(ray, viewer.scene)
+      polylinePosition.push(position)
+
+      if (polylinePosition.length > 1) {
+        if (Object.keys(floatPoint).length !== 0) viewer.entities.remove(floatPoint)
+        if (Object.keys(floatPolyline).length !== 0) viewer.entities.remove(floatPolyline)
+        lastPolyline = drawPolyline([polylinePosition[polylinePosition.length - 2], polylinePosition[polylinePosition.length - 1]], viewer)
+      }
+      if (polylinePosition.length > 2) {
+        if (Object.keys(floatPoint).length !== 0) viewer.entities.remove(floatPoint)
+        if (Object.keys(floatPolyline).length !== 0) viewer.entities.remove(floatPolyline)
+        if (Object.keys(lastPolygon).length !== 0) viewer.entities.remove(lastPolygon)
+        if (Object.keys(floatPolygon).length !== 0) viewer.entities.remove(floatPolygon)
+        lastPolygon = drawPolygon(polylinePosition.flat(), viewer)
+      }
 
         handler.destroy() // 关闭事件句柄
         handler = null
-      }
     }, Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK)
   }
   if (type === 'destroy') {
@@ -143,11 +195,12 @@ export function drawGeometry(type, viewer) {
  * @param { Object } viewer
  */
 export function drawPoint(position, viewer) {
-  const points = viewer.scene.primitives.add(new Cesium.PointPrimitiveCollection())
-  return points.add({
-    position: position,
-    color: Cesium.Color.YELLOW,
-    // outlineColor: Cesium.Color.RED,
+  return  viewer.entities.add({
+    position: new Cesium.CallbackProperty(() => {return position}, false),
+    point: {
+      color: new Cesium.CallbackProperty(() => {return Cesium.Color.RED}, false),
+      pixelSize: 10
+    }
   })
 }
 
@@ -157,85 +210,23 @@ export function drawPoint(position, viewer) {
  * @param { Object } viewer
  */
 export function drawPolyline(positions, viewer) {
-  if (positions.length < 1) return
-  console.log(positions);
-  const polylineGeometry = new Cesium.PolylineGeometry({
-    positions: positions,
-    width: 2
-  })
-  const polylineInstance = new Cesium.GeometryInstance({
-    geometry: polylineGeometry
-  })
-  const polylineMat = new Cesium.Material({
-    fabric: {
-      type: 'Color',
-      uniforms: {
-        color: Cesium.Color.YELLOW
-      }
+  return viewer.entities.add({
+    polyline: {
+      positions: new Cesium.CallbackProperty(() => {return positions}, false),
+      material: Cesium.Color.RED,
+      width: 2
     }
   })
-  const polylineAppearance = new Cesium.PolylineMaterialAppearance({
-    material: polylineMat
-  })
-  const polylinePrimitive = viewer.scene.primitives.add(new Cesium.Primitive({
-    geometryInstances: polylineInstance,
-    appearance: polylineAppearance,
-    asynchronous: false,
-  }))
-  console.log(polylinePrimitive, 'line')
-  return polylinePrimitive
 }
 
-// export function drawPolygon(positions, viewer) {
-//   console.log(positions)
-//   const polygonGeometry = new Cesium.PolygonGeometry({
-//     polygonHierarchy: new Cesium.PolygonHierarchy(positions)
 
-//   })
-//   const polygonInstance = new Cesium.GeometryInstance({
-//     geometry: polygonGeometry
-//   })
-//   const polygonMat = new Cesium.Material({
-//     fabric: {
-//       type: 'Color',
-//       uniforms: {
-//         color: Cesium.Color.YELLOW
-//       }
-//     }
-//   })
-//   const polygonAppearance = new Cesium.MaterialAppearance({
-//     material: polygonMat
-//   })
-//   const polygonPrimitive = viewer.scene.primitives.add(new Cesium.Primitive({
-//     geometryInstances: polygonInstance,
-//     appearance: polygonAppearance,
-//     asynchronous: false,
-//   }))
-//   console.log(polygonPrimitive)
-//   return polygonPrimitive
-// }
 export function drawPolygon(positions, viewer) {
-  const polygon = new Cesium.PolygonGeometry({
-    polygonHierarchy: new Cesium.PolygonHierarchy(positions)
-  });
-  const geometry = Cesium.PolygonGeometry.createGeometry(polygon);
-
-  const instance = new Cesium.GeometryInstance({
-    geometry: geometry
-  });
-
-  viewer.scene.primitives.add(new Cesium.Primitive({
-    geometryInstances: instance,
-    appearance: new Cesium.MaterialAppearance({
-      material: new Cesium.Material({
-        fabric: {
-          type: 'Color',
-          uniforms: {   
-              color: Cesium.Color.YELLOW.withAlpha(0.5)
-          }
-        }
-      })
-    }),
-    asynchronous: false,
-  }));
+ return viewer.entities.add({
+  polygon: {
+    hierarchy: {
+      positions: positions
+    },
+    material: Cesium.Color.RED.withAlpha(0.7)
+  }
+ })
 }
