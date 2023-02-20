@@ -4,15 +4,16 @@
       <el-button type="info" :icon="Coordinate" circle @click="editGeometry('point')"/>
       <el-button type="info" :icon="SemiSelect" circle @click="editGeometry('polyline')"/>
       <el-button type="info" :icon="Cloudy" circle @click="editGeometry('polygon')"/>
+      <el-button type="info" :icon="Orange" circle @click="editGeometry('circle')"/>
+      <el-button type="info" :icon="Picture" circle @click="editGeometry('rectangle')"/>
       <el-button type="info" :icon="CircleCloseFilled" circle @click="editGeometry('destroy')"/>
-      <el-button type="info" :icon="CircleCloseFilled" circle @click="colorChange"/>
     </div>
   </div>
 
 </template>
 
 <script setup>
-import { Coordinate, SemiSelect, Cloudy, CircleCloseFilled } from '@element-plus/icons-vue'
+import { Coordinate, SemiSelect, Cloudy, CircleCloseFilled, Orange, Picture } from '@element-plus/icons-vue'
 import { onMounted, reactive } from '@vue/runtime-core'
 import * as Cesium from'cesium/Cesium'
 import { drawGeometry, drawPolyline, drawPolygon, drawPoint } from '@/utils/transforms'
@@ -61,10 +62,7 @@ function editGeometry(val) {
   console.log(val);
   drawGeometry(val, viewer)
 }
-function colorChange() {
-  color = Cesium.Color.YELLOW
-  console.log(color);
-}
+
 let color = reactive(Cesium.Color.RED)
 onMounted(() => {
   initCesium()
