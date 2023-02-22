@@ -1,4 +1,4 @@
-import * as Cesium from'cesium/Cesium'
+import * as Cesium from 'cesium/Cesium'
 
 
 /**
@@ -7,7 +7,7 @@ import * as Cesium from'cesium/Cesium'
  * @return { Array } 返回一个 WGS84 的经纬度坐标
  */
 export function cartesian3ToDegrees(cartesian3) {
-  const cartographic  = Cesium.Ellipsoid.WGS84.cartesianToCartographic(cartesian3)
+  const cartographic = Cesium.Ellipsoid.WGS84.cartesianToCartographic(cartesian3)
   // console.log(cartographic);
   const longitude = Cesium.Math.toDegrees(cartographic.longitude)
   const latitude = Cesium.Math.toDegrees(cartographic.latitude)
@@ -46,7 +46,7 @@ export function drawGeometry(type, viewer) {
           viewer.entities.remove(floatingPoint)
           floatingPoint = undefined
         }
-       drawPoint(earthPosition, viewer)
+        drawPoint(earthPosition, viewer)
       }
     }, Cesium.ScreenSpaceEventType.LEFT_CLICK)
     // 监听鼠标移动
@@ -55,7 +55,7 @@ export function drawGeometry(type, viewer) {
       const earthPosition = viewer.scene.globe.pick(ray, viewer.scene)
       floatingPosition = earthPosition
       if (!floatingPoint) {
-        floatingPoint = drawPoint( floatingPosition, viewer)
+        floatingPoint = drawPoint(floatingPosition, viewer)
       }
       if (Cesium.defined(floatingPoint)) {
         floatingPoint.position.setValue(earthPosition)
@@ -86,7 +86,7 @@ export function drawGeometry(type, viewer) {
       const earthPosition = viewer.scene.globe.pick(ray, viewer.scene)
       floatingPosition = earthPosition
       if (!floatingPoint) {
-        floatingPoint = drawPoint( floatingPosition, viewer)
+        floatingPoint = drawPoint(floatingPosition, viewer)
       }
       if (Cesium.defined(floatingPoint)) {
         floatingPoint.position.setValue(floatingPosition)
@@ -140,7 +140,7 @@ export function drawGeometry(type, viewer) {
       const earthPosition = viewer.scene.globe.pick(ray, viewer.scene)
       floatingPosition = earthPosition
       if (!floatingPoint) {
-        floatingPoint = drawPoint( floatingPosition, viewer)
+        floatingPoint = drawPoint(floatingPosition, viewer)
       }
       if (Cesium.defined(floatingPoint)) {
         floatingPoint.position.setValue(floatingPosition)
@@ -172,9 +172,9 @@ export function drawGeometry(type, viewer) {
       }
       handler.destroy()
       handler = null
-  }, Cesium.ScreenSpaceEventType.RIGHT_CLICK)
+    }, Cesium.ScreenSpaceEventType.RIGHT_CLICK)
   }
-  if (type === 'circle'){
+  if (type === 'circle') {
     dynamicPositions = []
     // 监听鼠标左键
     handler.setInputAction(function (click) {
@@ -198,7 +198,7 @@ export function drawGeometry(type, viewer) {
       const earthPosition = viewer.scene.globe.pick(ray, viewer.scene)
       floatingPosition = earthPosition
       if (!floatingPoint) {
-        floatingPoint = drawPoint( floatingPosition, viewer)
+        floatingPoint = drawPoint(floatingPosition, viewer)
       }
       if (Cesium.defined(floatingPoint)) {
         floatingPoint.position.setValue(floatingPosition)
@@ -231,17 +231,18 @@ export function drawGeometry(type, viewer) {
       const earthPosition = viewer.scene.globe.pick(ray, viewer.scene)
       floatingPosition = earthPosition
       if (!floatingPoint) {
-        floatingPoint = drawPoint( floatingPosition, viewer)
+        floatingPoint = drawPoint(floatingPosition, viewer)
       }
       if (Cesium.defined(floatingPoint)) {
         floatingPoint.position.setValue(floatingPosition)
         dynamicPositions.pop()
         dynamicPositions.push(floatingPosition)
       }
+
     }, Cesium.ScreenSpaceEventType.MOUSE_MOVE)
   }
   if (type === 'destroy') {
-    dynamicPositions= []
+    dynamicPositions = []
     viewer.entities.removeAll()
     floatingPoint = undefined
     handler.destroy()
@@ -254,12 +255,12 @@ export function drawGeometry(type, viewer) {
  * @param { Cartesian3 } position 卡迪尔空间直角坐标
  * @param { Object } viewer
  */
-export function drawPoint( position, viewer) {
-  return  viewer.entities.add({
+export function drawPoint(position, viewer) {
+  return viewer.entities.add({
     // position: position,
     position: position,
     point: {
-      color: new Cesium.CallbackProperty(() => {return Cesium.Color.RED}, false),
+      color: new Cesium.CallbackProperty(() => { return Cesium.Color.RED }, false),
       pixelSize: 10
     }
   })
@@ -273,7 +274,7 @@ export function drawPoint( position, viewer) {
 export function drawPolyline(positions, viewer) {
   return viewer.entities.add({
     polyline: {
-      positions: new Cesium.CallbackProperty(() => {return positions}, false),
+      positions: new Cesium.CallbackProperty(() => { return positions }, false),
       material: Cesium.Color.RED,
       width: 2
     }
@@ -287,14 +288,14 @@ export function drawPolyline(positions, viewer) {
  * @param { Object } viewer
  */
 export function drawPolygon(positions, viewer) {
- return viewer.entities.add({
-  polygon: {
-    hierarchy: new Cesium.CallbackProperty(() => {
-      return new Cesium.PolygonHierarchy(positions)
-    }, false),
-    material: Cesium.Color.RED.withAlpha(0.7)
-  }
- })
+  return viewer.entities.add({
+    polygon: {
+      hierarchy: new Cesium.CallbackProperty(() => {
+        return new Cesium.PolygonHierarchy(positions)
+      }, false),
+      material: Cesium.Color.RED.withAlpha(0.7)
+    }
+  })
 }
 
 /**
@@ -332,8 +333,9 @@ export function drawRactangle(positions, viewer) {
   return viewer.entities.add({
     rectangle: {
       coordinates: new Cesium.CallbackProperty(() => {
-        return new Cesium.Rectangle(positions[0].x, positions[positions.length - 1].y, positions[positions.length - 1].x, positions[0].y)
+        return Cesium.Rectangle.fromCartesianArray(positions)
       }, false),
+
       material: Cesium.Color.RED.withAlpha(0.5)
     }
   })
